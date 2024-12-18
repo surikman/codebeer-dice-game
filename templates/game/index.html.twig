@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    <h1>Hello, {{ app.user.name }}</h1>
+    <p>You have {{ dice_count }} dice left.</p>
+
+    <form method="POST" action="{{ path('app_game:roll_dice') }}">
+        <input type="hidden" name="token" value="{{ csrf_token('roll-dice') }}">
+        <button type="submit">Roll Dice</button>
+    </form>
+
+{% endblock %}

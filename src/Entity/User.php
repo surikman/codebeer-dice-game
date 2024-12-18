@@ -3,7 +3,9 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use App\Value\DiceRollConfig;
 use Doctrine\ORM\Mapping as ORM;
+use InvalidArgumentException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -27,10 +29,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private array $roles = [];
 
     /**
-     * @var string The hashed password
+     * @var string|null The hashed password
      */
     #[ORM\Column]
     private ?string $password = null;
+
+    #[ORM\Column]
+    private int $availableRolls = 0;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $lastRolledNumber = null;
 
     public function getId(): ?int
     {
@@ -60,9 +68,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
+     * @return list<string>
      * @see UserInterface
      *
-     * @return list<string>
      */
     public function getRoles(): array
     {
@@ -105,5 +113,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    private function canRollDice(DiceRollConfig $config): bool
+    {
+        return $this->availableRolls >= $config->costPerRoll;
+    }
+
+    public function applyRoll(DiceRollConfig $config, int $rolledNumber): void
+    {
+        if (!$this->canRollDice($config)) {
+            throw new InvalidArgumentException('Not enough dice to roll!');
+        }
+
+        $this->availableRolls -= 1;
+        $this->lastRolledNumber = $rolledNumber;
+    }
+
+    public function availableRolls(): int
+    {
+        return $this->availableRolls;
+    }
+
+    public function initializeDiceCount(DiceRollConfig $config): void
+    {
+        $this->availableRolls = $config->initialDiceCount;
     }
 }

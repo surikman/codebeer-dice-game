@@ -11,8 +11,13 @@ use Twig\Environment;
 #[Route('/')]
 final class IndexController
 {
-    public function __invoke(Environment $twig): Response
+    public function __construct(
+        private readonly Environment $twig,
+    ) {
+    }
+
+    public function __invoke(): Response
     {
-        return new Response($twig->render('base.html.twig'));
+        return new Response($this->twig->render('base.html.twig'));
     }
 }
